@@ -1,7 +1,8 @@
 <div id="transferModal"
      class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
   <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md relative">
-    <button id="closeModal" class="absolute top-3 right-4 text-gray-500 dark:text-gray-400 text-2xl hover:text-red-600">&times;</button>
+    <button id="closeModal"
+            class="absolute top-3 right-4 text-gray-500 dark:text-gray-400 text-2xl hover:text-red-600">&times;</button>
     <h2 class="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">💸 New Transfer</h2>
 
     <form method="POST" action="{% url 'accounts:new_transfer' %}">
@@ -30,3 +31,30 @@
     </form>
   </div>
 </div>
+
+<script>
+  const transferModal = document.getElementById('transferModal');
+  const openBtns = [document.getElementById('openTransferModal'), document.getElementById('openTransferModal2')];
+  const closeBtn = document.getElementById('closeModal');
+
+  openBtns.forEach(btn => {
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      transferModal.classList.remove('hidden');
+      transferModal.classList.add('flex');
+    });
+  });
+
+  closeBtn.addEventListener('click', () => {
+    transferModal.classList.add('hidden');
+    transferModal.classList.remove('flex');
+  });
+
+  // Close modal on clicking outside
+  transferModal.addEventListener('click', (e) => {
+    if(e.target === transferModal){
+      transferModal.classList.add('hidden');
+      transferModal.classList.remove('flex');
+    }
+  });
+</script>

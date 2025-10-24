@@ -10,7 +10,7 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+    background: radial-gradient(circle at 20% 20%, #0f172a, #1e293b, #0f172a);
     color: #111;
 }
 
@@ -24,22 +24,41 @@ body {
     position: relative;
 }
 
+/* Glow background */
+.glow-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(56,189,248,0.1), rgba(139,92,246,0.1), rgba(236,72,153,0.1));
+    filter: blur(100px);
+    animation: pulse 8s infinite alternate;
+    z-index: 0;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+    100% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+}
+
 /* Card container */
 .landing-card {
     position: relative;
     width: 100%;
     max-width: 1200px;
-    background: rgba(255,255,255,0.95);
+    background: #fff;
     border-radius: 2rem;
     padding: 3rem 4rem;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
     align-items: start;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    box-shadow: 0 0 30px rgba(0,0,0,0.2);
+    z-index: 2;
 }
 
-@media (max-width: 1024px) { .landing-card { grid-template-columns: 1fr; padding: 2rem; } }
+@media (max-width: 1024px) {
+    .landing-card { grid-template-columns: 1fr; padding: 2rem; }
+}
 
 /* Headings */
 .landing-card h2 {
@@ -47,7 +66,6 @@ body {
     font-weight: 700;
     margin-bottom: 2rem;
     color: #111;
-    text-shadow: none; /* removed glow */
 }
 
 /* Labels style */
@@ -56,7 +74,7 @@ body {
     margin-bottom: 0.5rem;
     font-weight: 600;
     font-size: 0.95rem;
-    color: #374151; /* subtle dark gray */
+    color: #374151;
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
@@ -67,11 +85,12 @@ body {
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
     border-radius: 0.75rem;
-    border: 1px solid rgba(0,0,0,0.1);
-    background: #fff;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: #f9fafb;
     color: #111;
     outline: none;
     transition: all 0.3s ease;
+    font-size: 0.95rem;
 }
 
 .landing-card input:focus, .landing-card select:focus {
@@ -79,17 +98,24 @@ body {
     box-shadow: 0 0 10px rgba(59,130,246,0.3);
 }
 
+/* Error messages */
+.field-error {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
 /* Webcam card */
 .camera-card {
-    background: #f9fafb;
+    background: #fff;
     border: 2px solid #3b82f6;
     border-radius: 1.5rem;
-    padding: 1rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 20px rgba(59,130,246,0.3);
+    box-shadow: 0 0 25px rgba(59,130,246,0.3);
 }
 
 .camera-card video {
@@ -162,43 +188,92 @@ body {
 
 {% block content %}
 <section class="landing-section">
-  <div class="landing-card">
-    <!-- Form -->
-    <div>
-      <h2>Create New Account</h2>
+    <div class="glow-bg"></div>
+    <div class="landing-card">
+        <!-- Form -->
+        <div>
+            <h2>Create New Account</h2>
 
-      <div id="msgBox" class="message-box"></div>
+            <div id="msgBox" class="message-box"></div>
 
-      <form method="POST" enctype="multipart/form-data" action="{% url 'accounts:register' %}">
-        {% csrf_token %}
-        <div class="grid gap-4 sm:grid-cols-2 sm:gap-4">
-          <div class="w-full"><label>First Name</label>{{ form.first_name }}</div>
-          <div class="w-full"><label>Last Name</label>{{ form.last_name }}</div>
-          <div class="sm:col-span-2"><label>Username</label>{{ form.username }}</div>
-          <div class="sm:col-span-2"><label>Email</label>{{ form.email }}</div>
-          <div><label>Password</label>{{ form.password1 }}</div>
-          <div><label>Confirm Password</label>{{ form.password2 }}</div>
-          <div class="w-full"><label>Phone Number</label>{{ form.phone_number }}</div>
-          <div><label>Gender</label>{{ form.gender }}</div>
+            <form method="POST" enctype="multipart/form-data" action="{% url 'accounts:register' %}">
+                {% csrf_token %}
+                <div class="grid gap-4 sm:grid-cols-2 sm:gap-4">
+                    <div class="w-full">
+                        <label>First Name</label>
+                        {{ form.first_name }}
+                        {% for error in form.first_name.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="w-full">
+                        <label>Last Name</label>
+                        {{ form.last_name }}
+                        {% for error in form.last_name.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label>Username</label>
+                        {{ form.username }}
+                        {% for error in form.username.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label>Email</label>
+                        {{ form.email }}
+                        {% for error in form.email.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label>Password</label>
+                        {{ form.password1 }}
+                        {% for error in form.password1.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label>Confirm Password</label>
+                        {{ form.password2 }}
+                        {% for error in form.password2.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="w-full">
+                        <label>Phone Number</label>
+                        {{ form.phone_number }}
+                        {% for error in form.phone_number.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label>Gender</label>
+                        {{ form.gender }}
+                        {% for error in form.gender.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="w-full text-center mt-6">
+                    <button type="submit" id="registerSubmit">Register</button>
+                </div>
+            </form>
         </div>
 
-        <div class="w-full text-center mt-6">
-          <button type="submit" id="registerSubmit">Register</button>
+        <!-- Camera -->
+        <div class="camera-card">
+            <h3 class="mb-3 font-semibold">Capture Your Face</h3>
+            <video id="camera" width="320" height="240" autoplay playsinline muted></video>
+            <canvas id="snapshot" width="320" height="240" style="display:none;"></canvas>
+            <img id="preview" alt="" style="display:none;width:160px;height:auto;" />
+            <input type="hidden" name="captured_image" id="capturedImageInput" />
+            <button type="button" id="captureBtn">Capture Face</button>
+            <p class="text-sm mt-2">After capturing, click Register.</p>
         </div>
-      </form>
     </div>
-
-    <!-- Camera -->
-    <div class="camera-card">
-      <h3 class="mb-3 font-semibold">Capture Your Face</h3>
-      <video id="camera" width="320" height="240" autoplay playsinline muted></video>
-      <canvas id="snapshot" width="320" height="240" style="display:none;"></canvas>
-      <img id="preview" alt="" style="display:none;width:160px;height:auto;" />
-      <input type="hidden" name="captured_image" id="capturedImageInput" />
-      <button type="button" id="captureBtn">Capture Face</button>
-      <p class="text-sm mt-2">After capturing, click Register.</p>
-    </div>
-  </div>
 </section>
 
 <script>

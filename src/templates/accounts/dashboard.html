@@ -3,210 +3,446 @@
 {% block title %}Banking Dashboard{% endblock %}
 
 {% block content %}
-<section class="bg-gray-50 dark:bg-gray-900 min-h-screen flex">
+<style>
+  /* ---------- Page background ---------- */
+  :root{
+    --card-bg: rgba(255,255,255,0.85);
+    --muted: #6b7280;
+    --glass-border: rgba(255,255,255,0.6);
+  }
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white dark:bg-gray-800 shadow-lg hidden md:block">
-    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">🏦 MyBank</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome, {{ user.username|capfirst }}</p>
+  body {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ---------- Layout ---------- */
+  .dashboard-wrap {
+    max-width: 1200px;
+    margin: 1.5rem auto;
+    padding: 1rem;
+  }
+
+  .top-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:1rem;
+    margin-bottom:1.25rem;
+  }
+
+  /* ---------- Cards (glass) ---------- */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(8px) saturate(120%);
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 6px 18px rgba(20,30,60,0.06);
+    padding: 1.25rem;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(20,30,60,0.08);
+  }
+
+  .summary-grid {
+    display:grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap:1rem;
+  }
+  @media (min-width:768px) {
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .summary-title { font-size:0.78rem; color:var(--muted); letter-spacing:0.04em; text-transform:uppercase; }
+  .summary-amount { font-size:1.9rem; font-weight:700; margin-top:0.35rem; }
+
+  /* ---------- Transactions ---------- */
+  .transactions {
+    margin-top: 1rem;
+  }
+  .txn-table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.95rem;
+    color:#111827;
+  }
+  .txn-table thead th {
+    text-align:left;
+    padding:0.85rem;
+    font-weight:600;
+    color:#374151;
+    background:linear-gradient(180deg,#fbfdff,#f8fafc);
+    border-bottom:1px solid rgba(15,23,42,0.04);
+  }
+  .txn-table tbody tr td {
+    padding:0.75rem;
+    border-bottom:1px solid rgba(15,23,42,0.04);
+  }
+  .txn-row:hover { background: #fbfdff; }
+
+  /* ---------- Quick actions ---------- */
+  .actions-grid {
+    display:grid;
+    grid-template-columns: repeat(1,1fr);
+    gap:1rem;
+    margin-top:1rem;
+  }
+  @media (min-width:768px) {
+    .actions-grid { grid-template-columns: repeat(3,1fr); }
+  }
+  .action-button {
+    padding:1.25rem;
+    font-weight:600;
+    font-size:1.02rem;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ---------- Camera card ---------- */
+  .camera-wrap {
+    display:flex;
+    gap:1rem;
+    align-items:center;
+  }
+  .camera-area {
+    width: 100%;
+    max-width: 420px;
+  }
+  .camera-video {
+    width:100%;
+    border-radius:10px;
+    border:1px solid rgba(15,23,42,0.06);
+    object-fit:cover;
+    height:240px;
+    background:#000;
+  }
+
+  .status-pill {
+    display:inline-flex;
+    gap:0.6rem;
+    align-items:center;
+    padding:0.45rem 0.6rem;
+    border-radius:999px;
+    font-weight:600;
+    font-size:0.95rem;
+    background:rgba(255,255,255,0.6);
+    border:1px solid rgba(15,23,42,0.04);
+  }
+  .status-dot {
+    width:12px; height:12px; border-radius:999px;
+    box-shadow: 0 0 0 rgba(0,0,0,0.06);
+  }
+  .status-verified { background:#10b981; } /* green */
+  .status-invalid  { background:#ef4444; } /* red */
+  .status-pending  { background:#f59e0b; } /* amber */
+
+  /* ---------- Small misc ---------- */
+  .muted { color:var(--muted); font-size:0.95rem; }
+  a.small-link { color:#374151; text-decoration:underline; font-weight:600; }
+</style>
+
+<div class="dashboard-wrap">
+
+  <!-- Header (Greeting + Primary CTA) -->
+  <div class="top-row">
+    <div>
+      <h1 style="font-size:1.85rem; margin:0 0 0.2rem 0; font-weight:800;">Hello, {{ user.first_name|default:user.username|capfirst }} 👋</h1>
+      <p class="muted" style="margin:0;">Last login: {{ user.last_login|date:"d M Y, h:i A" }}</p>
     </div>
 
-    <nav class="mt-6 space-y-2">
-      <a href="{% url 'accounts:dashboard' %}" class="block px-6 py-3 bg-blue-50 dark:bg-gray-700 rounded-r-full font-medium text-gray-800 dark:text-white">🏠 Dashboard</a>
-      <a href="{% url 'accounts:home' %}" class="block px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-r-full font-medium">💰 Accounts</a>
-      <a href="{% url 'accounts:cards' %}" class="block px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-r-full font-medium">💳 Cards</a>
-      <a href="{% url 'accounts:transfers' %}" class="block px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-r-full font-medium">📤 Transfers</a>
-      <a href="{% url 'accounts:settings' %}" class="block px-6 py-3 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-r-full font-medium">⚙️ Settings</a>
-      <a href="{% url 'accounts:logout' %}" class="block px-6 py-3 mt-8 bg-gradient-to-r from-red-500 to-red-700 text-white font-medium rounded-r-full hover:opacity-90 text-center">Logout</a>
-    </nav>
-  </aside>
-
-  <!-- Main Dashboard -->
-  <main class="flex-1 p-8">
-
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-1">
-          Hello, {{ user.first_name|default:user.username|capfirst }} 👋
-        </h1>
-        <p class="text-gray-500 dark:text-gray-400 text-sm">
-          Last login: {{ user.last_login|date:"d M Y, h:i A" }}
-        </p>
-      </div>
-
-      <!-- ✅ Fixed button ID -->
-      <button id="openTransferModal"
-        class="mt-4 md:mt-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-2.5 rounded-lg shadow hover:shadow-lg transition">
+    <div style="display:flex; gap:0.75rem; align-items:center;">
+      <a href="{% url 'accounts:transfers' %}" class="small-link">View Statements</a>
+      <button id="openTransferModal" class="card" style="padding:0.6rem 1rem; background:linear-gradient(90deg,#3b82f6,#7c3aed); color:white; border:none; border-radius:10px; box-shadow:none; cursor:pointer;">
         + New Transfer
       </button>
     </div>
+  </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow hover:shadow-lg transition">
-        <h2 class="text-gray-500 dark:text-gray-400 text-sm uppercase">Total Balance</h2>
-        <p class="text-3xl font-bold text-green-600 mt-2">
-          ₹{{ balance|default:"0.00" }}
-        </p>
-        <p class="text-sm text-gray-400 mt-1">Net Available Balance</p>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow hover:shadow-lg transition">
-        <h2 class="text-gray-500 dark:text-gray-400 text-sm uppercase">Total Income</h2>
-        <p class="text-3xl font-bold text-blue-600 mt-2">
-          ₹{{ total_credit|default:"0.00" }}
-        </p>
-        <p class="text-sm text-gray-400 mt-1">All credits received</p>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow hover:shadow-lg transition">
-        <h2 class="text-gray-500 dark:text-gray-400 text-sm uppercase">Total Spent</h2>
-        <p class="text-3xl font-bold text-red-500 mt-2">
-          ₹{{ total_debit|default:"0.00" }}
-        </p>
-        <p class="text-sm text-gray-400 mt-1">All debits processed</p>
-      </div>
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="card">
+      <div class="summary-title">Total Balance</div>
+      <div class="summary-amount" style="color:#059669;">₹{{ balance|default:"0.00" }}</div>
+      <div class="muted" style="margin-top:0.6rem;">Net Available Balance</div>
     </div>
 
-    <!-- Transactions Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 mb-10">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Recent Transactions</h2>
+    <div class="card">
+      <div class="summary-title">Total Income</div>
+      <div class="summary-amount" style="color:#2563eb;">₹{{ total_credit|default:"0.00" }}</div>
+      <div class="muted" style="margin-top:0.6rem;">All credits received</div>
+    </div>
+
+    <div class="card">
+      <div class="summary-title">Total Spent</div>
+      <div class="summary-amount" style="color:#ef4444;">₹{{ total_debit|default:"0.00" }}</div>
+      <div class="muted" style="margin-top:0.6rem;">All debits processed</div>
+    </div>
+  </div>
+
+  <!-- Main content grid: Transactions (left) + Camera card (right on wide screens) -->
+  <div style="display:grid; grid-template-columns: 1fr; gap:1rem; margin-top:1rem;">
+    <div class="card">
+      <h2 style="margin:0 0 0.6rem 0; font-size:1.15rem; font-weight:700;">Recent Transactions</h2>
+
       {% if transactions %}
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-gray-700 dark:text-gray-300">
-          <thead class="bg-gray-100 dark:bg-gray-700">
-            <tr>
-              <th class="py-3 px-4">Date</th>
-              <th class="py-3 px-4">Description</th>
-              <th class="py-3 px-4">Type</th>
-              <th class="py-3 px-4">Amount</th>
-              <th class="py-3 px-4 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for txn in transactions %}
-            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-              <td class="py-3 px-4">{{ txn.created_at|date:"d M Y" }}</td>
-              <td class="py-3 px-4">{{ txn.description }}</td>
-              <td class="py-3 px-4 capitalize">{{ txn.transaction_type }}</td>
-              <td class="py-3 px-4 {% if txn.transaction_type == 'debit' %}text-red-500{% else %}text-green-600{% endif %}">
-                {% if txn.transaction_type == 'debit' %}-{% else %}+{% endif %} ₹{{ txn.amount }}
-              </td>
-              <td class="py-3 px-4 text-right {% if txn.status == 'Completed' %}text-green-500{% else %}text-yellow-500{% endif %}">
-                {{ txn.status }}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="transactions">
+        <div style="overflow-x:auto;">
+          <table class="txn-table" role="table" aria-label="Recent transactions">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th class="text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for txn in transactions %}
+              <tr class="txn-row">
+                <td>{{ txn.created_at|date:"d M Y" }}</td>
+                <td>{{ txn.description }}</td>
+                <td class="capitalize">{{ txn.transaction_type }}</td>
+                <td class="{% if txn.transaction_type == 'debit' %}text-red-500{% else %}text-green-600{% endif %}">
+                  {% if txn.transaction_type == 'debit' %}-{% else %}+{% endif %} ₹{{ txn.amount }}
+                </td>
+                <td style="text-align:right; color: {% if txn.status == 'Completed' %}#10b981{% else %}#f59e0b{% endif %};">
+                  {{ txn.status }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
       {% else %}
-        <p class="text-gray-500 dark:text-gray-400 italic">No transactions found yet.</p>
+        <p class="muted">No transactions found yet.</p>
       {% endif %}
     </div>
 
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <button id="openTransferModal2" class="p-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center">
-        💸 Transfer Money
-      </button>
-      <a href="{% url 'accounts:transfers' %}" class="p-6 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center">
-        📊 View Statements
-      </a>
-      <a href="{% url 'accounts:settings' %}" class="p-6 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center">
-        ⚙️ Manage Account
-      </a>
+    <!-- Camera card: placed after transactions on small screens, but we will float it on the right on larger screens using media queries -->
+    <div class="card" id="cameraCard" style="display:flex; flex-direction:column; gap:0.8rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="margin:0; font-weight:700;">Face Verification</h3>
+          <p class="muted" style="margin:0.15rem 0 0 0; font-size:0.95rem;">Live camera feed + continuous verification</p>
+        </div>
+
+        <!-- Status pill -->
+        <div id="facePill" class="status-pill" aria-live="polite" title="Face verification status">
+          <span id="faceDot" class="status-dot status-pending" aria-hidden="true"></span>
+          <span id="statusText" style="font-weight:700; color:#111827;">Initializing...</span>
+        </div>
+      </div>
+
+      <div class="camera-wrap">
+        <div class="camera-area">
+          <video id="faceStream" autoplay muted playsinline class="camera-video"></video>
+        </div>
+
+        <div style="flex:1; display:flex; flex-direction:column; gap:0.6rem;">
+          <div style="display:flex; gap:0.6rem; align-items:center;">
+            <button id="captureNow" class="card" style="padding:0.6rem 0.9rem; border-radius:10px; background:#3b82f6; color:white; border:none; cursor:pointer;">Capture & Verify</button>
+            <button id="toggleCamera" class="card" style="padding:0.6rem 0.9rem; border-radius:10px; background:#efefef; color:#111827; border:1px solid rgba(0,0,0,0.04); cursor:pointer;">Toggle Camera</button>
+          </div>
+
+          <p class="muted" style="margin-top:auto;">If verification fails repeatedly the system will log out for safety.</p>
+        </div>
+      </div>
     </div>
-    <!-- Live Face Stream & Status -->
-<div class="fixed top-6 right-8 z-50 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-3 flex items-center space-x-3 border border-gray-200 dark:border-gray-700">
-  <!-- Status Indicator -->
-  <div id="faceStatus" class="w-4 h-4 rounded-full bg-gray-400 animate-pulse"></div>
-  <span id="statusText" class="text-sm font-medium text-gray-700 dark:text-gray-300">Initializing...</span>
-  <!-- Live camera preview -->
-  <video id="faceStream" autoplay muted playsinline class="ml-4 w-28 h-20 rounded-lg object-cover border border-gray-300 dark:border-gray-600"></video>
-</div>
+  </div>
 
-  </main>
-</section>
+  <!-- Quick Actions -->
+    <div class="actions-grid" style="margin-top:1rem;">
+        <a href="{% url 'accounts:logout' %}"
+           class="action-button"
+           style="background:linear-gradient(90deg,#ef4444,#b91c1c); color:white; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+            🚪 Logout
+        </a>
+        <a href="{% url 'accounts:transfers' %}"
+           class="action-button"
+           style="background:linear-gradient(90deg,#10b981,#06b6d4); color:white; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+            📊 View Statements
+        </a>
+        <a href="{% url 'accounts:settings' %}"
+           class="action-button"
+           style="background:linear-gradient(90deg,#8b5cf6,#ec4899); color:white; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+            ⚙️ Manage Account
+        </a>
+    </div>
 
-<!-- Include transfer modal -->
 {% include "accounts/_transfer_modal.html" %}
 
-<!-- Script to handle modal -->
 <script>
-const video = document.getElementById("faceStream");
-const dot = document.getElementById("faceStatus");
-const text = document.getElementById("statusText");
-let failureCount = 0;
+/* ---------- Keep original JS behavior, only adapt UI updates ---------- */
 
-// Start webcam stream
-navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
+/* Modal open buttons (preserve) */
+const openTransferModal = document.getElementById('openTransferModal');
+const openTransferModal2 = document.getElementById('openTransferModal2');
+const transferModal = document.getElementById('transferModal');
+
+[openTransferModal, openTransferModal2].forEach(btn => {
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!transferModal) return;
+    transferModal.classList.remove('hidden');
+  });
+});
+
+/* Camera + face verification logic (preserve endpoints & CSRF) */
+const video = document.getElementById("faceStream");
+const faceDot = document.getElementById("faceDot");
+const statusText = document.getElementById("statusText");
+const facePill = document.getElementById("facePill");
+const captureNowBtn = document.getElementById("captureNow");
+const toggleCameraBtn = document.getElementById("toggleCamera");
+
+let failureCount = 0;
+let currentStream = null;
+let useFront = true; // flag for toggling if device supports it
+
+function setStatus(state, text) {
+  /* state: 'verified' | 'invalid' | 'pending' | 'error' */
+  faceDot.classList.remove('status-verified', 'status-invalid', 'status-pending');
+  if (state === 'verified') {
+    faceDot.classList.add('status-verified');
+    statusText.textContent = text || 'Verified';
+  } else if (state === 'invalid') {
+    faceDot.classList.add('status-invalid');
+    statusText.textContent = text || 'Mismatch';
+  } else if (state === 'pending') {
+    faceDot.classList.add('status-pending');
+    statusText.textContent = text || 'Verifying...';
+  } else {
+    faceDot.classList.add('status-pending');
+    statusText.textContent = text || 'Initializing...';
+  }
+}
+
+/* request camera */
+async function startCamera() {
+  try {
+    if (currentStream) {
+      // stop existing tracks before requesting a new stream
+      currentStream.getTracks().forEach(t => t.stop());
+      currentStream = null;
+    }
+
+    // prefer user-facing camera where available
+    const constraints = {
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: useFront ? "user" : "environment"
+      },
+      audio: false
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    currentStream = stream;
     video.srcObject = stream;
     video.play();
-    text.textContent = "Camera active";
-    dot.className = "w-3 h-3 rounded-full bg-blue-500 animate-pulse";
-    startContinuousVerification(stream);
-  })
-  .catch(err => {
-    text.textContent = "Camera access denied";
-    dot.className = "w-3 h-3 rounded-full bg-red-600";
-  });
-
-// Main verification loop
-function startContinuousVerification(stream) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  async function captureAndVerify() {
-    try {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const captured_image = canvas.toDataURL("image/png");
-
-      const res = await fetch("{% url 'accounts:reverify_face' %}", {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": "{{ csrf_token }}",
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({ captured_image })
-      });
-      const data = await res.json();
-
-      if (data.status === "valid") {
-        failureCount = 0;
-        dot.className = "w-3 h-3 rounded-full bg-green-500";
-        text.textContent = "Verified";
-      } 
-      else if (data.status === "invalid") {
-        failureCount++;
-        dot.className = "w-3 h-3 rounded-full bg-red-500 animate-pulse";
-        text.textContent = `Mismatch #${failureCount}`;
-
-        // 🚨 Auto logout — non-blocking
-        if (failureCount >= 3) {
-          text.textContent = "Security breach — logging out...";
-          dot.className = "w-3 h-3 rounded-full bg-red-600 animate-ping";
-
-          setTimeout(() => {
-            window.location.replace("{% url 'accounts:logout' %}");
-          }, 1500);
-        }
-      }
-    } catch (err) {
-      dot.className = "w-3 h-3 rounded-full bg-yellow-400";
-      text.textContent = "Verification error";
-    }
+    setStatus('pending', 'Camera active');
+    // start verification loop after camera is active
+    // (the verification loop itself is separate)
+  } catch (err) {
+    console.error("Camera error:", err);
+    setStatus('error', 'Camera access denied');
   }
-
-  // Run every second (1s)
-  setInterval(captureAndVerify, 1000);
 }
-</script>
 
+/* capture one frame, POST to server, update UI based on response */
+async function captureAndVerifyOnce() {
+  if (!video || !video.videoWidth) return;
+  setStatus('pending', 'Verifying...');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const captured_image = canvas.toDataURL('image/png');
+
+  try {
+    const res = await fetch("{% url 'accounts:reverify_face' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({ captured_image })
+    });
+    const data = await res.json();
+
+    if (data.status === "valid") {
+      failureCount = 0;
+      setStatus('verified', 'Verified');
+    } else if (data.status === "invalid") {
+      failureCount++;
+      setStatus('invalid', `Mismatch #${failureCount}`);
+      if (failureCount >= 3) {
+        setStatus('invalid','Security breach — logging out...');
+        setTimeout(() => {
+          window.location.replace("{% url 'accounts:logout' %}");
+        }, 1500);
+      }
+    } else {
+      // fallback for unexpected server states
+      setStatus('error', 'Verification error');
+    }
+  } catch (err) {
+    console.error("Verification request failed:", err);
+    setStatus('error', 'Verification error');
+  }
+}
+
+/* continuous verification loop */
+let verificationInterval = null;
+function startContinuousVerification() {
+  // don't start multiple intervals
+  if (verificationInterval) return;
+  // immediately run one capture, then run on interval
+  captureAndVerifyOnce();
+  // interval in ms: adjusting to a moderate frequency (e.g. 12s)
+  verificationInterval = setInterval(captureAndVerifyOnce, 12000);
+}
+function stopContinuousVerification() {
+  if (verificationInterval) {
+    clearInterval(verificationInterval);
+    verificationInterval = null;
+  }
+}
+
+/* toggle camera facing */
+toggleCameraBtn && toggleCameraBtn.addEventListener('click', () => {
+  useFront = !useFront;
+  startCamera();
+});
+
+/* manual capture */
+captureNowBtn && captureNowBtn.addEventListener('click', () => {
+  captureAndVerifyOnce();
+});
+
+/* initialize camera */
+startCamera().then(() => {
+  // small delay to allow video to initialize
+  setTimeout(() => {
+    startContinuousVerification();
+  }, 800);
+});
+
+/* clean up when navigating away */
+window.addEventListener('beforeunload', () => {
+  stopContinuousVerification();
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+  }
+});
+</script>
 
 {% endblock %}
