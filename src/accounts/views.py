@@ -35,75 +35,78 @@ faceRecognition = FaceRecognition()
 
 def accounts_register(request):
     if request.method == "POST":
-        face_base64 = request.POST.get("captured_image")  # from hidden input
+        face_base64 = request.POST.get("captured_image")  # hidden input
         form = UserCreationForm(request.POST, request.FILES)
 
         if form.is_valid():
             new_user = form.save(commit=False)
             new_user.save()
             face_id = new_user.id
-            phone_number = new_user.phone_number
+            phone_number = getattr(new_user, "phone_number", None)
 
-            # ✅ Ensure dataset directory exists
+            # ✅ Make sure dataset directory exists
             dataset_dir = os.path.join("media", "dataset")
             os.makedirs(dataset_dir, exist_ok=True)
 
-            # Save Base64 image if provided
+            # --- FACE CAPTURE ---
             if face_base64:
                 try:
-                    # Remove the prefix "data:image/png;base64,"
-                    format, imgstr = face_base64.split(';base64,')
+                    _, imgstr = face_base64.split(";base64,")
                     img_data = base64.b64decode(imgstr)
                     nparr = np.frombuffer(img_data, np.uint8)
                     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
                     if img is None:
-                        messages.error(request, "Failed to decode captured image")
-                        new_user.delete()
+                        messages.error(request, "Failed to decode captured image.")
                         return redirect("accounts:register")
 
                     save_path = os.path.join(dataset_dir, f"User.{face_id}.1.jpg")
                     cv2.imwrite(save_path, img)
+                    print(f"✅ Saved face image at {save_path}")
 
                 except Exception as e:
                     messages.error(request, f"Error processing image: {e}")
-                    new_user.delete()
+                    print("❌ Image error:", e)
                     return redirect("accounts:register")
             else:
-                messages.error(request, "No face image captured")
-                new_user.delete()
+                messages.error(request, "⚠️ Please capture your face before registering.")
+                print("❌ No face image captured.")
                 return redirect("accounts:register")
 
-            # Train face recognition model
+            # --- TRAIN FACE RECOGNIZER ---
             try:
                 faceRecognition.trainFace()
+                print("✅ Face model retrained successfully.")
             except Exception as e:
-                
-                new_user.delete()
-                return redirect("accounts:register")
+                print("❌ Training error:", e)
+                messages.warning(request, "Registered, but face model training failed.")
 
-            # Optional: send Twilio SMS
+            # --- Optional SMS ---
             if phone_number:
                 try:
-                    client = Client(config('PHONE_ACCOUNT_SID'), config('PHONE_AUTH_TOKEN'))
+                    client = Client(config("PHONE_ACCOUNT_SID"), config("PHONE_AUTH_TOKEN"))
                     client.messages.create(
                         body="Welcome! Your face has been registered successfully.",
                         from_=config("PHONE_FROM"),
-                        to=f"+91{phone_number}"
+                        to=f"+91{phone_number}",
                     )
+                    print("📩 Twilio message sent.")
                 except Exception as e:
-                    print("Twilio error:", e)
+                    print("❌ Twilio error:", e)
 
-            # Send async welcome email
-            #send_email.delay(f"Hello {new_user.username}", new_user.email)
-
-            
+            messages.success(request, "🎉 Registration successful! You can now log in.")
             return redirect("accounts:login")
 
         else:
-            # Form errors
+            print("❌ Form errors detected:")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"  - {field}: {error}")
+            import sys; sys.stdout.flush()
+            messages.error(request, "Form validation failed. Please check all fields.")
             return render(request, "accounts/register.html", {"form": form})
 
+    # --- GET request ---
     else:
         form = UserCreationForm()
 

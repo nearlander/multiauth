@@ -90,8 +90,9 @@
       <li><a href="/accounts/home">Home</a></li>
       <li><a href="/accounts/about">About</a></li>
       <li><a href="/accounts/contact">Contact</a></li>
-      <li><a href="/login" class="btn">Login</a></li>
-      <li><a href="/register" class="btn">Register</a></li>
+      <li><a href="{% url 'accounts:login' %}" class="btn">Login</a></li>
+<li><a href="{% url 'accounts:register' %}" class="btn">Register</a></li>
+
     </ul>
   </nav>
 

@@ -256,6 +256,7 @@ body {
                         {% endfor %}
                     </div>
                 </div>
+                <input type="hidden" name="captured_image" id="capturedImageInput" />
 
                 <div class="w-full text-center mt-6">
                     <button type="submit" id="registerSubmit">Register</button>
@@ -269,7 +270,7 @@ body {
             <video id="camera" width="320" height="240" autoplay playsinline muted></video>
             <canvas id="snapshot" width="320" height="240" style="display:none;"></canvas>
             <img id="preview" alt="" style="display:none;width:160px;height:auto;" />
-            <input type="hidden" name="captured_image" id="capturedImageInput" />
+            
             <button type="button" id="captureBtn">Capture Face</button>
             <p class="text-sm mt-2">After capturing, click Register.</p>
         </div>
